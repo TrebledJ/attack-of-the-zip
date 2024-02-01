@@ -11,7 +11,7 @@ This repository contains several Docker containers hosting web instances vulnera
 There are currently two containers to play with.
 
 1. `01-playground`. This is a simplified playground with a basic upload interface and codebase for testing various zip payloads. **New 'players' are recommended to start here!**
-2. `02-juice`. This is the original challenge from Firebird CTF 2024; complete with slick DJ interface, slightly more complex codebase, and slightly stronger defenses.
+2. `02-juice`. This is the original challenge for Firebird CTF 2024; complete with slick DJ interface, slightly more complex codebase, and slightly stronger defenses.
     ![](docs/juice.png)
 
 These containers host a C++ web application built with the Drogon web framework and the Juce audio processing library (v6.1.4) for unzipping files. This was adapted from a recent web challenge I designed for HKUST Firebird CTF 2024. In the original challenge, Juce was used for audio synthesis. But to keep things simple, I've minimised the code to only unzip files—a mere shell of its former glory.
