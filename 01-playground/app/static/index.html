@@ -1,0 +1,94 @@
+<!-- Simple file upload adapted from the Drogon example. -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>MuseScore Metadata Viewer</title>
+    <script type="text/javascript">
+        var xhr;
+        //File uploading method
+        function uploadFile() {
+            var url = "/upload";
+
+            var form = new FormData(); // FormData object
+            form.append("score", document.getElementById("scoreFile").files[0]);
+
+            xhr = new XMLHttpRequest();  // XMLHttpRequest object
+            xhr.open("post", url, true); //post
+            xhr.onload = uploadComplete;
+            xhr.onerror = uploadFailed;
+
+            xhr.upload.onprogress = progressFunction;
+            xhr.upload.onloadstart = function () {
+                ot = new Date().getTime();
+                oloaded = 0;
+            };
+
+            xhr.send(form);
+        }
+
+        function fetchOutput(data) {
+            const intervalId = setInterval(() => {
+                fetch("/info?id=" + data).then(r => r.text()).then(s => {
+                    document.getElementById("output").innerText = s;
+                    clearInterval(intervalId);
+                    document.getElementById("progressBar").value = 0;
+                    document.getElementById("info").innerHTML = "";
+                });
+            }, 500);
+        }
+
+        function uploadComplete(evt) {
+            var data = evt.target.responseText;
+            document.getElementById("info").innerHTML = "File uploaded!";
+            fetchOutput(data);
+        }
+        
+        function uploadFailed(evt) {
+            document.getElementById("info").innerHTML = "Upload failed!";
+            fetchOutput(data);
+        }
+
+        function cancelUploadFile() {
+            xhr.abort();
+        }
+
+        function progressFunction(evt) {
+            var progressBar = document.getElementById("progressBar");
+            if (evt.lengthComputable) {//
+                progressBar.max = evt.total;
+                progressBar.value = evt.loaded;
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <h1>MuseScore Metadata Viewer</h1>
+    <p>Upload a MuseScore file to view its metadata!</p>
+    <progress id="progressBar" value="0" max="100" style="width: 300px;"></progress>
+    <span id="info"></span>
+    <br /><br />
+    <table>
+        <tr>
+            <td>
+                <span>Score</span>
+            </td>
+            <td>
+                <input type="file" id="scoreFile" name="scoreFile" accept=".mscz,.zip" />
+            </td>
+        </tr>
+        <tr></tr>
+        <tr>
+            <td></td>
+            <td>
+                <input type="button" onclick="uploadFile()" value="Upload" />
+                <input type="button" onclick="cancelUploadFile()" value="Cancel" />
+            </td>
+        </tr>
+    </table>
+    <pre id="output"></pre>
+</body>
+
+</html>

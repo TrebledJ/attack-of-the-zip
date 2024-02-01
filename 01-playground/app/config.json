@@ -1,0 +1,39 @@
+{
+    "listeners": [
+        {
+            "address": "0.0.0.0",
+            "port": 8080
+        }
+    ],
+    "app": {
+        "number_of_threads": 1,
+        "document_root": "./",
+        "upload_path": "uploads",
+        "use_implicit_page": true,
+        "implicit_page": "index.html",
+        "file_types": [
+            "html",
+            "css",
+            "js",
+            "txt",
+            "jpg",
+            "png"
+        ],
+        "locations": [
+            {
+                "uri_prefix": "/",
+                "default_content_type": "text/plain",
+                "alias": "static/",
+                "is_case_sensitive": true,
+                "allow_all": false,
+                "is_recursive": true,
+                "filters": []
+            }
+        ],
+        "max_connections": 1000,
+        "max_connections_per_ip": 10,
+        "use_gzip": true,
+        "static_files_cache_time": 1,
+        "client_max_body_size": "5M"
+    }
+}
