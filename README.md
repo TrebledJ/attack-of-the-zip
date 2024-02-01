@@ -28,6 +28,22 @@ These containers host a C++ web application built with the Drogon web framework 
     docker compose up -d --build
     ```
 
+    Grab a drink while waiting for the container to compile and build.
+
+3. Access the container at http://localhost:8080.
+
+4. Debug the container state by (1) opening Docker Desktop and navigating to the container's terminal OR (2) by using [`docker exec -it`](https://stackoverflow.com/a/30173220/10239789).
+    - This is useful when you want to figure out what was unzipped. Or what location your file was unzipped to.
+
+
+## Usage
+
+1. Upload a file.
+2. ???
+3. Try to read `/app/flag.txt`.
+
+Good luck.
+
 ## Challenges
 
 Exercises for the reader!
