@@ -1,1 +1,682 @@
-function e(){function a(e){var t=i.createElement("link");t.type="image/x-icon",t.rel="icon",t.href=e,e=n.getElementsByTagName("link");for(var s=0;s<e.length;s++)/\bicon\b/i.test(e[s].getAttribute("rel"))&&n.removeChild(e[s]);n.appendChild(t)}var i=document,n=i.getElementsByTagName("head")[0],o=null;return{defaultPause:2e3,change:function(e,t){clearTimeout(o),t&&(i.title=t),""!==e&&a(e)},animate:function(t,s){clearTimeout(o),t.forEach(function(e){(new Image).src=e}),s=s||this.defaultPause;var i=0;a(t[i]),o=setTimeout(function e(){i=(i+1)%t.length,a(t[i]),o=setTimeout(e,s)},s)},stopAnimate:function(){clearTimeout(o)}}}function s({method:e,url:a,headers:n,responseType:o,params:r,form:d,onprogress:u,uploadonprogress:h}){return new Promise(function(t,s){var i=new XMLHttpRequest;i.open(e,a),o&&(i.responseType=o),i.onload=function(e){200<=i.status&&i.status<300?t(i.response):s({status:i.status,statusText:i.statusText})},i.onerror=function(){console.log("error:",i.status),s({status:i.status,statusText:i.statusText})},u&&(i.onprogress=u),h&&(i.upload.onprogress=h),n&&Object.keys(n).forEach(function(e){i.setRequestHeader(e,n[e])}),r?("object"==typeof r&&(r=Object.keys(r).map(function(e){return encodeURIComponent(e)+"="+encodeURIComponent(r[e])}).join("&")),i.send(r)):d?i.send(d):i.send()})}"function"==typeof define&&define.amd?define([],e):"object"==typeof module&&module.exports?module.exports=e():("undefined"!=typeof self?self:this).favicon=e();const i=(e,t,s)=>Math.max(t,Math.min(e,s)),a=e=>{var{left:e,top:t,width:s,height:i}=e.getBoundingClientRect();return{x:e+s/2,y:t+i/2}},n=(e,t)=>Math.atan2(t.y-e.y,t.x-e.x),o=(e,t)=>Math.atan2(Math.sin(e-t),Math.cos(e-t)),t=.75,r=60*t,d=r*Math.PI*2,u=d/60,h=.001*u,l=2*Math.PI;class m{constructor(e,t){this.elContainer=e,this.elDiscs=t,this._isPoweredOn=!1,this._playbackSpeed=1,this._duration=0,this._isDragging=!1,this.centers=this.elDiscs.map(a),this.angle=0,this.anglePrevious=0,this.maxAngle=l,this.rafId=null,this.timestampPrevious=performance.now(),this.draggingSpeeds=[],this.draggingFrom={},this.isReversed=!1,this.onDragStart=this.onDragStart.bind(this),this.onDragProgress=this.onDragProgress.bind(this),this.onDragEnd=this.onDragEnd.bind(this),this.loop=this.loop.bind(this),this.callbacks={onDragEnded:()=>{},onAutoRotate:()=>{},onStop:()=>{},onLoop:()=>{}},this.currDragDisc=null,this.init()}init(){this.elDiscs.forEach((e,t)=>e.addEventListener("pointerdown",e=>this.onDragStart(e,t)))}get playbackSpeed(){return this._playbackSpeed}set playbackSpeed(e){this.draggingSpeeds.push(e),this.draggingSpeeds=this.draggingSpeeds.slice(Math.max(0,this.draggingSpeeds.length-10));e=this.draggingSpeeds.reduce((e,t)=>e+t,0)/this.draggingSpeeds.length;this._playbackSpeed=i(e,-4,4)}get secondsPlayed(){return this.angle/l/t}get duration(){return this._duration}set duration(e){this._duration=e,this.maxAngle=e*t*l}set isDragging(t){this._isDragging=t,this.elDiscs.forEach(e=>e.classList.toggle("is-scratching",t))}get isDragging(){return this._isDragging}powerOn(){this._isPoweredOn=!0,this._playbackSpeed=1,this.start()}powerOff(){this._isPoweredOn=!1,this.stop()}onDragStart(e,t){this.currDragDisc=t,document.body.addEventListener("pointermove",this.onDragProgress),document.body.addEventListener("pointerup",this.onDragEnd),this.centers[t]=a(this.elDiscs[t]),this.draggingFrom={x:e.clientX,y:e.clientY},this.isDragging=!0}onDragProgress(e){e.preventDefault();var{clientX:e,clientY:t}=e,e={x:e,y:t},t=n(this.centers[this.currDragDisc],e),s=n(this.centers[this.currDragDisc],this.draggingFrom),s=o(s,t);this.setAngle(this.angle-s),this.draggingFrom={...e},this.setState()}onDragEnd(){document.body.removeEventListener("pointermove",this.onDragProgress),document.body.removeEventListener("pointerup",this.onDragEnd),this.currDragDisc=null,this.isDragging=!1,this.playbackSpeed=1,this.callbacks.onDragEnded(this.secondsPlayed)}autoRotate(e){var e=e-this.timestampPrevious,t=h*e*this.playbackSpeed;t+=.1,t=i(t,0,h*e),this.setAngle(this.angle+t)}setState(){this.elContainer.style.setProperty("--disc-angle",this.angle+"rad")}setAngle(e){return this.angle=i(e,0,this.maxAngle),this.angle}start(){this.isDragging=!1,this.isReversed=!1,this.anglePrevious=this.angle,this.timestampPrevious=performance.now(),this.draggingSpeeds=[1],this._playbackSpeed=1,this.loop()}stop(){cancelAnimationFrame(this.rafId),this.callbacks.onStop()}rewind(){this.setAngle(0)}loop(){var e,t,s,i;this._isPoweredOn&&(t=performance.now(),this.isDragging||this.autoRotate(t),t=t-this.timestampPrevious,e=this.angle-this.anglePrevious,t=h*t,{playbackSpeed:e,isReversed:t,secondsPlayed:s,duration:i}=(this.playbackSpeed=e/t||1,this.isReversed=this.angle<this.anglePrevious,this.anglePrevious=this.angle,this.timestampPrevious=performance.now(),this.setState(),this),this.callbacks.onLoop({playbackSpeed:e,isReversed:t,secondsPlayed:s,progress:s/i}),this.anglePrevious=this.angle,this.rafId=requestAnimationFrame(this.loop))}}class f{constructor(){this.audioContext=new AudioContext,this.gainNode=this.audioContext.createGain(),this.audioBuffer=null,this.audioBufferReversed=null,this.audioSource=null,this.duration=0,this.speedPrevious=0,this.isReversed=!1,this.gainNode.connect(this.audioContext.destination),this.onended=()=>{}}async getArrayBufferFromUrlWithProgress(e){return w.download(e,{responseType:"arraybuffer"}).then(e=>(w.status="Loading audio...",e),()=>{})}async getArrayBufferFromUrl(e){return(await fetch(e)).arrayBuffer()}async getAudioBuffer(e){e=await this.getArrayBufferFromUrlWithProgress(e);return this.audioContext.decodeAudioData(e)}async loadTrack(e){this.audioBuffer=await this.getAudioBuffer(e),this.audioBufferReversed=this.getReversedAudioBuffer(this.audioBuffer),this.duration=this.audioBuffer.duration}getReversedAudioBuffer(e){var t=e.getChannelData(0).slice().reverse(),e=this.audioContext.createBuffer(1,e.length,e.sampleRate);return e.getChannelData(0).set(t),e}changeDirection(e,t){this.isReversed=e,this.play(t)}play(e=0){this.pause();var t=this.isReversed?this.audioBufferReversed:this.audioBuffer,e=this.isReversed?this.duration-e:e;this.audioSource=this.audioContext.createBufferSource(),this.audioSource.buffer=t,this.audioSource.loop=!1,this.audioSource.addEventListener("ended",this.onended),this.audioSource.connect(this.gainNode),this.audioSource.start(0,e)}onEnded(e){this.onended=e}updateSpeed(e,t,s){this.audioSource&&(t!==this.isReversed&&this.changeDirection(t,s),t=this.audioContext["currentTime"],this.audioSource.playbackRate.cancelScheduledValues(t),this.audioSource.playbackRate.linearRampToValueAtTime(Math.max(.001,Math.abs(e)),t))}toggleMute(e){this.gainNode.gain.value=e?0:1}pause(){this.audioSource&&this.audioSource.stop()}}class b{constructor({toggleButton:e,rewindButton:t}){this.toggleButton=e,this.rewindButton=t,this.isPlaying=!1,this.toggleButton.addEventListener("click",e=>this.toggle(e)),this.rewindButton.addEventListener("click",e=>this.rewind(e)),document.body.addEventListener("keydown",e=>this.onKeyDown(e)),document.body.addEventListener("keyup",e=>this.onKeyUp(e)),this.callbacks={onIsPlayingChanged:()=>{},onRewind:()=>{},onToggleMuted:()=>{}}}set label(e){this.toggleButton.textContent=e}set isDisabled(e){this.toggleButton.disabled=e}onKeyDown({key:e,repeat:t}){t||"m"!==e||this.callbacks.onToggleMuted(!0)}onKeyUp({key:e}){"m"===e&&this.callbacks.onToggleMuted(!1)}toggle(){this.isPlaying=!this.isPlaying,this.callbacks.onIsPlayingChanged(this.isPlaying)}rewind(){this.callbacks.onRewind()}stop(){this.isPlaying&&this.toggle()}}class v{constructor({progressBar:e,statusText:t}){this.progressBar=e,this.statusText=t,this.busy=!1}get running(){return this.busy}upload(e,t){if(this.running)throw new Error("upload: ProgressRequest is busy.");return this.ot=(new Date).getTime(),this.oloaded=0,this.start(),s({method:"POST",url:e,form:t,uploadonprogress:this.onprogress.bind(this)}).then(e=>(this.finish(),e)).catch(({status:e,statusText:t})=>{throw this.finish(),this.status=413==e?"Upload file(s) too large!":"Upload failed... Try using a smaller file?",new Error({status:e,statusText:t})})}download(e,{responseType:t}){if(this.running)throw new Error("download: ProgressRequest is busy.");return this.start(),s({method:"GET",url:e,onprogress:this.onprogress.bind(this),responseType:t}).then(e=>(this.finish(),e)).catch(({status:e,statusText:t})=>{throw this.finish(),this.status="Audio download failed.",new Error({status:e,statusText:t})})}onprogress(e){e.lengthComputable&&this.updateBar(Math.round(e.loaded/e.total*100)+"%")}cancel(){this.xhr.abort(),this.finish()}set status(e){this.statusText.innerText=e}get status(){return this.statusText.innerText}start(){this.showBar(),this.busy=!0}finish(){this.hideBar(),this.busy=!1}hideBar(){this.progressBar.style.opacity=0,this.progressBar.style.setProperty("--progress","0%")}showBar(){this.progressBar.style.opacity=1,this.progressBar.style.setProperty("--progress","0%")}updateBar(e){this.progressBar.style.setProperty("--progress",e)}}var w;function c(){w=new v({progressBar:document.querySelector("#progressBar"),statusText:document.querySelector("#statusText")});var e=document.querySelector(".turntable");const n=new m(e,[...document.querySelectorAll(".disc")]),o=new f,a=new b({toggleButton:document.querySelector("#playButton"),rewindButton:document.querySelector("#rewind")}),t=document.getElementById("audioFile"),s=document.getElementById("scoreFile"),i=document.getElementById("uploadButton"),r=document.getElementById("playButton"),d=document.getElementById("playButton__text"),u=document.getElementById("djcat"),h=document.getElementById("disc__label__audio"),l=document.getElementById("disc__label__score");var c=!1,g=!1;function p(){c&&g&&(i.removeAttribute("hide"),r.removeAttribute("hide"),document.querySelector("body").setAttribute("dark",""),h.removeAttribute("active"),l.removeAttribute("active"),document.querySelectorAll(".disc__label__fb").forEach(e=>e.setAttribute("active","")))}function y(){i.disabled=!1}n.duration=o.duration,n.callbacks.onDragEnded=()=>{a.isPlaying&&o.play(n.secondsPlayed)},n.callbacks.onStop=()=>o.pause(),n.callbacks.onLoop=({playbackSpeed:e,isReversed:t,secondsPlayed:s,progress:i})=>{.9999<i&&(a.stop(),a.rewind()),o.updateSpeed(e,t,s)},a.callbacks.onIsPlayingChanged=e=>{e?(n.powerOn(),o.play(n.secondsPlayed),d.innerText="Stop",favicon.change("static/assets/ablobcatdj.webp"),u.classList.add("active")):(n.powerOff(),d.innerText="Play",favicon.change("static/assets/ablobcatdjslow.webp"),u.classList.remove("active"))},a.callbacks.onRewind=()=>{n.rewind()},a.callbacks.onToggleMuted=e=>{o.toggleMute(e)},h.addEventListener("click",function(){t.click()}),l.addEventListener("click",function(){s.click()}),t.addEventListener("change",function(){document.getElementById("disc__background__audio").setAttribute("active",""),c=!0,p()}),s.addEventListener("change",function(){document.getElementById("disc__background__score").setAttribute("active",""),g=!0,p()}),i.addEventListener("click",function(){i.disabled=!0,r.disabled=!0,a.stop(),d.innerText="Play",w.status="Uploading...";var e=new FormData;e.append("audio",document.getElementById("audioFile").files[0]),e.append("score",document.getElementById("scoreFile").files[0]),w.upload("/upload",e).then(e=>{w.status="Files uploaded!";const t=e,a=(w.status="...",setInterval(function(){var s,i;s=t,i=a,s&&fetch("/status?id="+s).then(async e=>{var t,e=await e.text();"Done"===e?(clearInterval(i),t="/audio?id="+s,await o.loadTrack(t),await!(n.duration=o.duration),w.status="Audio loaded!",n.rewind(),y(),r.disabled=!1):e.startsWith("Fail")?(w.status=e,clearInterval(i),y()):"None"===e?w.status="Bad Request (maybe?)":w.status.startsWith(e)?w.status+=".":w.status=e+"..."}).catch(e=>console.log(e))},5e3))},()=>{y()})})}"loading"!==document.readyState?c():document.addEventListener("DOMContentLoaded",function(){c()});
+// My jankiest code yet.
+
+// favicon.min.js
+/* http://mit-license.org */ function e() {
+  function f(a) { var b = g.createElement("link"); b.type = "image/x-icon"; b.rel = "icon"; b.href = a; a = h.getElementsByTagName("link"); for (var c = 0; c < a.length; c++)/\bicon\b/i.test(a[c].getAttribute("rel")) && h.removeChild(a[c]); h.appendChild(b) } var g = document, h = g.getElementsByTagName("head")[0], d = null; return {
+    defaultPause: 2E3, change: function (a, b) { clearTimeout(d); b && (g.title = b); "" !== a && f(a) }, animate: function (a, b) {
+      clearTimeout(d); a.forEach(function (a) { (new Image).src = a }); b = b || this.defaultPause; var c = 0;
+      f(a[c]); d = setTimeout(function k() { c = (c + 1) % a.length; f(a[c]); d = setTimeout(k, b) }, b)
+    }, stopAnimate: function () { clearTimeout(d) }
+  }
+} "function" === typeof define && define.amd ? define([], e) : "object" === typeof module && module.exports ? module.exports = e() : ("undefined" !== typeof self ? self : this).favicon = e();
+// end favicon.min.js
+
+function makeRequest({ method, url, headers, responseType, params, form, onprogress, uploadonprogress }) {
+  // Blatantly adapted from https://stackoverflow.com/a/30008115/10239789.
+  return new Promise(function (resolve, reject) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(method, url);
+    if (responseType)
+      xhr.responseType = responseType;
+    xhr.onload = function (evt) {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(xhr.response);
+      } else {
+        reject({
+          status: xhr.status,
+          statusText: xhr.statusText
+        });
+      }
+    };
+    xhr.onerror = function () {
+      console.log('error:', xhr.status);
+      reject({
+        status: xhr.status,
+        statusText: xhr.statusText
+      });
+    };
+    if (onprogress)
+      xhr.onprogress = onprogress;
+    if (uploadonprogress)
+      xhr.upload.onprogress = uploadonprogress;
+    if (headers) {
+      Object.keys(headers).forEach(function (key) {
+        xhr.setRequestHeader(key, headers[key]);
+      });
+    }
+    if (params) {
+      // We'll need to stringify if we've been given an object
+      // If we have a string, this is skipped.
+      if (params && typeof params === 'object') {
+        params = Object.keys(params).map(function (key) {
+          return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]);
+        }).join('&');
+      }
+      xhr.send(params);
+    } else if (form) {
+      xhr.send(form);
+    } else {
+      xhr.send();
+    }
+  });
+}
+
+// Blatantly adapted from https://codepen.io/pimskie/pen/bGjMdxV.
+// Disc-jockeying UX is a bit wonky with two discs, but whatebbs.
+const clamp = (x, lo, hi) => Math.max(lo, Math.min(x, hi)),
+  centerOf = (i) => {
+    const { left: e, top: t, width: s, height: n } = i.getBoundingClientRect(),
+      o = e + s / 2,
+      a = t + n / 2;
+    return { x: o, y: a };
+  },
+  w = (i, e) => Math.atan2(e.y - i.y, e.x - i.x),
+  R = (i, e) => Math.atan2(Math.sin(i - e), Math.cos(i - e)),
+  spinRate = 0.75,
+  C = spinRate * 60,
+  L = C * Math.PI * 2,
+  M = L / 60,
+  b = M * 0.001,
+  rev = Math.PI * 2;
+
+class Disc {
+  constructor(elContainer, elDiscs) {
+    this.elContainer = elContainer;
+    this.elDiscs = elDiscs;
+    this._isPoweredOn = false;
+    this._playbackSpeed = 1;
+    this._duration = 0;
+    this._isDragging = false;
+    this.centers = this.elDiscs.map(centerOf);
+    this.angle = 0;
+    this.anglePrevious = 0;
+    this.maxAngle = rev;
+    this.rafId = null;
+    this.timestampPrevious = performance.now();
+    this.draggingSpeeds = [];
+    this.draggingFrom = {};
+    this.isReversed = false;
+    this.onDragStart = this.onDragStart.bind(this);
+    this.onDragProgress = this.onDragProgress.bind(this);
+    this.onDragEnd = this.onDragEnd.bind(this);
+    this.loop = this.loop.bind(this);
+    this.callbacks = {
+      onDragEnded: () => { },
+      onAutoRotate: () => { },
+      onStop: () => { },
+      onLoop: () => { },
+    };
+    this.currDragDisc = null;
+    this.init();
+  }
+  init() {
+    this.elDiscs.forEach((d, i) => d.addEventListener("pointerdown", e => this.onDragStart(e, i)));
+  }
+  get playbackSpeed() {
+    return this._playbackSpeed;
+  }
+  set playbackSpeed(e) {
+    this.draggingSpeeds.push(e);
+
+    // Get last 10 items.
+    this.draggingSpeeds = this.draggingSpeeds.slice(Math.max(0, this.draggingSpeeds.length - 10));
+
+    const summed = this.draggingSpeeds.reduce((e, t) => e + t, 0) / this.draggingSpeeds.length;
+    this._playbackSpeed = clamp(summed, -4, 4);
+  }
+  get secondsPlayed() {
+    return this.angle / rev / spinRate;
+  }
+  get duration() {
+    return this._duration;
+  }
+  set duration(dur) {
+    this._duration = dur;
+    this.maxAngle = dur * spinRate * rev;
+  }
+  set isDragging(e) {
+    this._isDragging = e;
+    this.elDiscs.forEach(d => d.classList.toggle("is-scratching", e));
+  }
+  get isDragging() {
+    return this._isDragging;
+  }
+  powerOn() {
+    this._isPoweredOn = true;
+    this._playbackSpeed = 1;
+    this.start();
+  }
+  powerOff() {
+    this._isPoweredOn = false;
+    this.stop();
+  }
+  onDragStart(e, i) {
+    this.currDragDisc = i;
+    document.body.addEventListener("pointermove", this.onDragProgress);
+    document.body.addEventListener("pointerup", this.onDragEnd);
+    this.centers[i] = centerOf(this.elDiscs[i]);
+    this.draggingFrom = { x: e.clientX, y: e.clientY };
+    this.isDragging = true;
+  }
+  onDragProgress(e) {
+    e.preventDefault();
+    const { clientX: x, clientY: y } = e,
+      n = { x, y },
+      o = w(this.centers[this.currDragDisc], n),
+      a = w(this.centers[this.currDragDisc], this.draggingFrom),
+      l = R(a, o);
+    this.setAngle(this.angle - l),
+      (this.draggingFrom = { ...n }),
+      this.setState();
+  }
+  onDragEnd() {
+    document.body.removeEventListener("pointermove", this.onDragProgress);
+    document.body.removeEventListener("pointerup", this.onDragEnd);
+    this.currDragDisc = null;
+    this.isDragging = false;
+    this.playbackSpeed = 1;
+    this.callbacks.onDragEnded(this.secondsPlayed);
+  }
+  autoRotate(t) {
+    const dt = t - this.timestampPrevious;
+    let s = b * dt * this.playbackSpeed;
+    s += 0.1;
+    s = clamp(s, 0, b * dt);
+    this.setAngle(this.angle + s);
+  }
+  setState() {
+    // this.elContainer.style.transform = `rotate(${this.angle}rad)`;
+    this.elContainer.style.setProperty("--disc-angle", `${this.angle}rad`);
+  }
+  setAngle(e) {
+    return (this.angle = clamp(e, 0, this.maxAngle)), this.angle;
+  }
+  start() {
+    this.isDragging = false;
+    this.isReversed = false;
+    this.anglePrevious = this.angle;
+    this.timestampPrevious = performance.now();
+    this.draggingSpeeds = [1];
+    this._playbackSpeed = 1;
+    this.loop();
+  }
+  stop() {
+    cancelAnimationFrame(this.rafId);
+    this.callbacks.onStop();
+  }
+  rewind() {
+    this.setAngle(0);
+  }
+  loop() {
+    if (!this._isPoweredOn)
+      return;
+
+    const t = performance.now();
+    this.isDragging || this.autoRotate(t);
+    const dt = t - this.timestampPrevious,
+      dw = this.angle - this.anglePrevious,
+      n = b * dt;
+    this.playbackSpeed = (dw / n) || 1;
+    this.isReversed = this.angle < this.anglePrevious;
+    this.anglePrevious = this.angle;
+    this.timestampPrevious = performance.now();
+    this.setState();
+    const {
+      playbackSpeed,
+      isReversed,
+      secondsPlayed,
+      duration,
+    } = this;
+    this.callbacks.onLoop({
+      playbackSpeed,
+      isReversed,
+      secondsPlayed,
+      progress: secondsPlayed / duration,
+    });
+    this.anglePrevious = this.angle;
+    this.rafId = requestAnimationFrame(this.loop);
+  }
+}
+class AudioPlayer {
+  constructor() {
+    this.audioContext = new AudioContext();
+    this.gainNode = this.audioContext.createGain();
+    this.audioBuffer = null;
+    this.audioBufferReversed = null;
+    this.audioSource = null;
+    this.duration = 0;
+    this.speedPrevious = 0;
+    this.isReversed = false;
+    this.gainNode.connect(this.audioContext.destination);
+    this.onended = () => { };
+  }
+  async getArrayBufferFromUrlWithProgress(url) {
+    return await progressRequest.download(url, {
+      responseType: "arraybuffer",
+    }).then(resp => {
+      progressRequest.status = "Loading audio...";
+      return resp;
+    }, () => { });
+  }
+  async getArrayBufferFromUrl(url) {
+    return await (await fetch(url)).arrayBuffer();
+  }
+  async getAudioBuffer(url) {
+    // const t = await this.getArrayBufferFromUrl(url);
+    const t = await this.getArrayBufferFromUrlWithProgress(url);
+    return await this.audioContext.decodeAudioData(t);
+  }
+  async loadTrack(url) {
+    this.audioBuffer = await this.getAudioBuffer(url);
+    this.audioBufferReversed = this.getReversedAudioBuffer(this.audioBuffer);
+    this.duration = this.audioBuffer.duration;
+  }
+  getReversedAudioBuffer(buf) {
+    const revbytes = buf.getChannelData(0).slice().reverse();
+    const revbuf = this.audioContext.createBuffer(1, buf.length, buf.sampleRate);
+    revbuf.getChannelData(0).set(revbytes);
+    return revbuf;
+  }
+  changeDirection(isReversed, t) {
+    this.isReversed = isReversed;
+    this.play(t);
+  }
+  play(t = 0) {
+    this.pause();
+    const buf = this.isReversed ? this.audioBufferReversed : this.audioBuffer;
+    const dur = this.isReversed ? this.duration - t : t;
+    this.audioSource = this.audioContext.createBufferSource();
+    this.audioSource.buffer = buf;
+    this.audioSource.loop = false;
+    this.audioSource.addEventListener("ended", this.onended);
+    this.audioSource.connect(this.gainNode);
+    this.audioSource.start(0, dur);
+  }
+  onEnded(callback) {
+    this.onended = callback;
+  }
+  updateSpeed(playbackSpeed, isReversed, secondsPlayed) {
+    if (!this.audioSource) return;
+    if (isReversed !== this.isReversed) {
+      this.changeDirection(isReversed, secondsPlayed);
+    }
+    const { currentTime } = this.audioContext;
+    this.audioSource.playbackRate.cancelScheduledValues(currentTime);
+    this.audioSource.playbackRate.linearRampToValueAtTime(
+      Math.max(0.001, Math.abs(playbackSpeed)),
+      currentTime,
+    );
+  }
+  toggleMute(e) {
+    this.gainNode.gain.value = e ? 0 : 1;
+  }
+  pause() {
+    this.audioSource && this.audioSource.stop();
+  }
+}
+class Controller {
+  constructor({ toggleButton: e, rewindButton: t }) {
+    this.toggleButton = e;
+    this.rewindButton = t;
+    this.isPlaying = false;
+    this.toggleButton.addEventListener("click", (s) => this.toggle(s));
+    this.rewindButton.addEventListener("click", (s) => this.rewind(s));
+    document.body.addEventListener("keydown", (s) => this.onKeyDown(s));
+    document.body.addEventListener("keyup", (s) => this.onKeyUp(s));
+    this.callbacks = {
+      onIsPlayingChanged: () => { },
+      onRewind: () => { },
+      onToggleMuted: () => { },
+    };
+  }
+  set label(e) {
+    this.toggleButton.textContent = e;
+  }
+  set isDisabled(e) {
+    this.toggleButton.disabled = e;
+  }
+  onKeyDown({ key, repeat }) {
+    repeat || key !== "m" || this.callbacks.onToggleMuted(true);
+  }
+  onKeyUp({ key }) {
+    key === "m" && this.callbacks.onToggleMuted(false);
+  }
+  toggle() {
+    this.isPlaying = !this.isPlaying;
+    // this.toggleButton.classList.toggle("is-active", this.isPlaying);
+    this.callbacks.onIsPlayingChanged(this.isPlaying);
+  }
+  rewind() {
+    this.callbacks.onRewind();
+  }
+  stop() {
+    if (this.isPlaying)
+      this.toggle();
+  }
+}
+
+class ProgressRequest {
+  constructor({ progressBar, statusText }) {
+    this.progressBar = progressBar;
+    this.statusText = statusText;
+    this.busy = false;
+  }
+
+  get running() {
+    return this.busy;
+  }
+
+  upload(url, form) {
+    if (this.running)
+      throw new Error("upload: ProgressRequest is busy.");
+    this.ot = new Date().getTime();
+    this.oloaded = 0;
+
+    this.start();
+    return makeRequest({ method: "POST", url, form, uploadonprogress: this.onprogress.bind(this) })
+      .then(resp => {
+        this.finish();
+        return resp;
+      })
+      .catch(({ status, statusText }) => {
+        this.finish();
+        if (status == 413) {
+          // Browsers doesn't take this branch, so the only clue users have is in the console.
+          this.status = "Upload file(s) too large!";
+        } else {
+          this.status = "Upload failed... Try using a smaller file?";
+        }
+        throw new Error({ status, statusText }); // Throw again to prevent later `then()` resolvers from triggering.
+      });
+  }
+
+  download(url, { responseType }) {
+    if (this.running)
+      throw new Error("download: ProgressRequest is busy.");
+
+    this.start();
+    return makeRequest({ method: "GET", url, onprogress: this.onprogress.bind(this), responseType })
+      .then(resp => {
+        this.finish();
+        return resp;
+      })
+      .catch(({ status, statusText }) => {
+        this.finish();
+        this.status = "Audio download failed.";
+        throw new Error({ status, statusText });
+      });
+  }
+
+  onprogress(evt) {
+    if (!evt.lengthComputable) {
+      return;
+    }
+
+    this.updateBar(Math.round(evt.loaded / evt.total * 100) + "%");
+
+    // var nt = new Date().getTime();
+    // var pertime = (nt - this.ot) / 1000;
+    // this.ot = new Date().getTime();
+    // var perload = evt.loaded - this.oloaded;
+    // this.oloaded = evt.loaded;
+    // var speed = perload / pertime;
+    // var bspeed = speed;
+    // var units = 'b/s';
+    // if (speed / 1024 > 1) {
+    //   speed = speed / 1024;
+    //   units = 'k/s';
+    // }
+    // if (speed / 1024 > 1) {
+    //   speed = speed / 1024;
+    //   units = 'M/s';
+    // }
+    // speed = speed.toFixed(1);
+    // var resttime = ((evt.total - evt.loaded) / bspeed).toFixed(1);
+    // if (bspeed == 0) {
+    //   this.status = 'Request stalled.';
+    //   this.finish();
+    // } else {
+    //   this.status = 'Speed: ' + speed + units + ', Remaining Time: ' + resttime + 's';
+    // }
+  }
+
+  cancel() {
+    this.xhr.abort();
+    this.finish();
+  }
+
+  set status(text) {
+    this.statusText.innerText = text;
+  }
+
+  get status() {
+    return this.statusText.innerText;
+  }
+
+  start() {
+    this.showBar();
+    this.busy = true;
+  }
+
+  finish() {
+    this.hideBar();
+    this.busy = false;
+  }
+
+  hideBar() {
+    this.progressBar.style.opacity = 0.0;
+    this.progressBar.style.setProperty("--progress", "0%");
+  }
+
+  showBar() {
+    this.progressBar.style.opacity = 1.0;
+    this.progressBar.style.setProperty("--progress", "0%");
+  }
+
+  updateBar(perc) {
+    this.progressBar.style.setProperty("--progress", perc);
+  }
+}
+
+var progressRequest;
+
+function init() {
+  progressRequest = new ProgressRequest({
+    progressBar: document.querySelector("#progressBar"),
+    statusText: document.querySelector("#statusText")
+  });
+  const turntable = document.querySelector(".turntable");
+  const disc = new Disc(turntable, [...document.querySelectorAll(".disc")]);
+  const player = new AudioPlayer();
+  const ctrl = new Controller({
+      toggleButton: document.querySelector("#playButton"),
+      rewindButton: document.querySelector("#rewind"),
+    });
+
+  const audioFile = document.getElementById("audioFile");
+  const scoreFile = document.getElementById("scoreFile");
+  const uploadButton = document.getElementById("uploadButton");
+  const playButton = document.getElementById("playButton");
+  const playButtonText = document.getElementById("playButton__text");
+  const djcat = document.getElementById("djcat");
+
+  const audioLabel = document.getElementById("disc__label__audio");
+  const scoreLabel = document.getElementById("disc__label__score");
+
+  var hasAudioFile = false, hasScoreFile = false;
+
+  // player.onEnded(() => { // Reverse doesn't work with this.
+  //   ctrl.stop();
+  // });
+
+  disc.duration = player.duration;
+  disc.callbacks.onDragEnded = () => {
+    ctrl.isPlaying && player.play(disc.secondsPlayed);
+  };
+  disc.callbacks.onStop = () => player.pause();
+  disc.callbacks.onLoop = ({
+    playbackSpeed,
+    isReversed,
+    secondsPlayed,
+    progress,
+  }) => {
+    if (progress > 0.9999) {
+      ctrl.stop();
+      ctrl.rewind();
+    }
+    player.updateSpeed(playbackSpeed, isReversed, secondsPlayed);
+  };
+
+  ctrl.callbacks.onIsPlayingChanged = (playing) => {
+    if (playing) {
+      disc.powerOn();
+      player.play(disc.secondsPlayed);
+      playButtonText.innerText = "Stop";
+      favicon.change("static/assets/ablobcatdj.webp");
+      djcat.classList.add("active");
+    } else {
+      disc.powerOff();
+      playButtonText.innerText = "Play";
+      favicon.change("static/assets/ablobcatdjslow.webp");
+      djcat.classList.remove("active");
+    }
+  };
+  ctrl.callbacks.onRewind = () => {
+    disc.rewind();
+  };
+  ctrl.callbacks.onToggleMuted = (i) => {
+    player.toggleMute(i);
+  };
+
+  async function loadAudio(path) {
+    await player.loadTrack(path);
+    disc.duration = player.duration;
+  }
+
+  audioLabel.addEventListener("click", function () {
+    audioFile.click();
+  });
+
+  scoreLabel.addEventListener("click", function () {
+    scoreFile.click();
+  });
+
+  function showButtons() {
+    if (hasAudioFile && hasScoreFile) {
+      uploadButton.removeAttribute("hide");
+      playButton.removeAttribute("hide");
+      document.querySelector("body").setAttribute("dark", "");
+
+      audioLabel.removeAttribute("active");
+      scoreLabel.removeAttribute("active");
+
+      const fbs = document.querySelectorAll(".disc__label__fb");
+      fbs.forEach(e => e.setAttribute("active", ""));
+    }
+  }
+
+  function enableUploadButton() {
+    uploadButton.disabled = false;
+  }
+
+  function disableUploadButton() {
+    uploadButton.disabled = true;
+  }
+
+  function enablePlayButton() {
+    playButton.disabled = false;
+  }
+
+  function disablePlayButton() {
+    playButton.disabled = true;
+  }
+
+  audioFile.addEventListener("change", function () {
+    const bg = document.getElementById("disc__background__audio");
+    bg.setAttribute("active", "");
+    hasAudioFile = true;
+    showButtons();
+  });
+  scoreFile.addEventListener("change", function () {
+    const bg = document.getElementById("disc__background__score");
+    bg.setAttribute("active", "");
+    hasScoreFile = true;
+    showButtons();
+  });
+
+
+  uploadButton.addEventListener("click", function () {
+    disableUploadButton();
+    disablePlayButton();
+
+    // Stop the music!
+    ctrl.stop();
+    playButtonText.innerText = "Play";
+    progressRequest.status = "Uploading...";
+
+    var form = new FormData(); // FormData object
+    form.append("audio", document.getElementById("audioFile").files[0]);
+    form.append("score", document.getElementById("scoreFile").files[0]);
+    progressRequest.upload("/upload", form).then(resp => {
+      progressRequest.status = "Files uploaded!";
+
+      const key = resp;
+      // fetchAndUpdateStatus(key);
+      progressRequest.status = "...";
+
+      const interval = setInterval(function () {
+        fetchAndUpdateStatus(key, interval);
+      }, 5000);
+    }, () => {
+      enableUploadButton();
+    });
+  });
+
+  function fetchAndUpdateStatus(key, interval) {
+    if (!key)
+      return;
+
+    fetch("/status?id=" + key).then(async (r) => {
+      const status = await r.text();
+      if (status === "Done") {
+        clearInterval(interval);
+
+        await loadAudio("/audio?id=" + key);
+        progressRequest.status = "Audio loaded!";
+        disc.rewind();
+
+        enableUploadButton();
+        enablePlayButton();
+
+      } else if (status.startsWith("Fail")) {
+        progressRequest.status = status;
+        clearInterval(interval);
+
+        enableUploadButton();
+
+      } else if (status === "None") {
+        progressRequest.status = "Bad Request (maybe?)";
+        // progressRequest.status = "Bad Request";
+        //   clearInterval(interval);
+
+        //   enableUploadButton();
+
+      } else {
+        if (progressRequest.status.startsWith(status)) {
+          progressRequest.status += "."; // Append a '.'.
+        } else {
+          progressRequest.status = status + "...";
+        }
+      }
+    }).catch(err => console.log(err));
+  }
+}
+
+if (document.readyState !== 'loading') {
+  init();
+} else {
+  document.addEventListener('DOMContentLoaded', function () {
+    init();
+  });
+}
+

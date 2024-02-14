@@ -10,11 +10,13 @@ This repository contains several Docker containers hosting web instances vulnera
 
 There are currently two containers to play with.
 
-1. `01-playground`. This is a simplified playground with a basic upload interface and codebase for testing various zip payloads. **New 'players' are recommended to start here!**
-2. `02-juice`. This is the original challenge for Firebird CTF 2024; complete with slick DJ interface, slightly more complex codebase, and slightly stronger defenses.
+1. `01-playground`. This is a simplified playground with a basic upload interface and codebase for testing various zip payloads. **New players are recommended to start here!**
+2. `02-juice`. This is the original challenge for Firebird CTF 2024; complete with slick turntable interface, slightly more complex codebase, slightly stronger defenses, and a friendly blobcat.
     ![](docs/juice.png)
 
-These containers host a C++ web application built with the Drogon web framework and the Juce audio processing library (v6.1.4) for unzipping files. This was adapted from a recent web challenge I designed for HKUST Firebird CTF 2024. In the original challenge, Juce was used for audio synthesis. But to keep things simple, I've minimised the code to only unzip files—a mere shell of its former glory.
+These containers host a C++ web application built with the Drogon web framework and the Juce audio processing library (v6.1.4) for unzipping files. The frontend contains a file upload form, accepting .mscz files—a zip file format for MuseScore music scores. (You don't need to download MuseScore to get the flag. Just rename your .zip to .mscz.)
+
+In the original challenge, Juce was used for audio synthesis. But to keep things simple, I've minimised the code to only unzip files—a mere shell of its former glory.
 
 
 ## Building
@@ -51,7 +53,7 @@ Exercises for the reader!
 
 ### The Basics
 
-Some guiding questions for `01-playground`.
+Some guiding questions for `01-playground` and `02-juice`.
 
 - Drogon will load configuration options from ______ (which file?).
 - Static files are served from ______ (which directory?).
@@ -70,6 +72,8 @@ Some guiding questions for `01-playground`.
 ### Challenge 2: `juice`
 
 Things are a lot more challenging!
+
+The app now requires two files to be uploaded: a .mp3 (audio file) and a .mscz (score file). The backend will synthesise the score onto the audio. Samples have been included in [`/02-juice/samples/`](/02-juice/samples/).
 
 The app now guards against null-byte injection in the `/audio` endpoint. More scarily, it also adds a suffix to any unzipped file, so that...
 
@@ -99,3 +103,19 @@ where `foo_a731c562f49d948e7ebbaa8749f6cb96.txt` is the unzipped file with the a
 2. You can still try the other zip symlink attacks to read `/app/flag.txt`.
     - If you figured out multiple payloads... which ones work and which don't?
     - Why do they not work now?
+
+<!-- TODO: note on juce being just an example, not to discourage usage -->
+
+## Short Note on Juce
+
+One thing I'd like to point out. Here, I used a vulnerable Juce version for the purpose of demonstration/education. It is not my intention to discourage using Juce. After all, these bugs have been fixed more than two years ago.
+
+## Credits
+
+The playgrounds here wouldn't have been possible without the shoulders of the following frameworks and examples.
+
+- [The Juce Framework](https://github.com/juce-framework/JUCE)
+- [The Drogon Web Framework](https://github.com/drogonframework/drogon)
+- [pimskie's Turntable Codepen](https://codepen.io/pimskie/pen/bGjMdxV)
+- [nuhmanpk's Neon Button Animation Codepen](https://codepen.io/nuhmanpk/pen/XWqBrae)
+- Various StackOverflow contributors.

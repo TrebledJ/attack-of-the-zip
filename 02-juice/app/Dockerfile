@@ -1,4 +1,4 @@
-FROM drogonframework/drogon
+FROM drogonframework/drogon:latest@sha256:8375b3f136fc875882a781b6d87390378b1a13b1399c79a621274b34a4134ad3
 
 RUN apt-get update && \
     apt-get install -y \
