@@ -2,9 +2,7 @@
 
 *Disclaimer: This repository is intended for demonstration and education purposes only. The author does not assume any responsibility for the potential misuse of techniques presented herein.*
 
-This repository contains several Docker containers hosting web instances vulnerable to zip attacks. (Relevant blog post incoming.)
-
-<!-- TODO: link -->
+This repository contains several Docker containers hosting web instances vulnerable to [zip attacks](https://trebledj.me/posts/attack-of-the-zip).
 
 ## Overview
 
@@ -104,7 +102,6 @@ where `foo_a731c562f49d948e7ebbaa8749f6cb96.txt` is the unzipped file with the a
     - If you figured out multiple payloads... which ones work and which don't?
     - Why do they not work now?
 
-<!-- TODO: note on juce being just an example, not to discourage usage -->
 
 ## Short Note on Juce
 
