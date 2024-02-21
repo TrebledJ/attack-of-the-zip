@@ -29,7 +29,7 @@ In the original challenge, Juce was used for audio synthesis. But to keep things
     docker compose up -d --build
     ```
 
-    Grab a drink while waiting for the container to compile and build.
+    Grab a drink while the container is being built.
 
 3. Access the container at http://localhost:8080.
 
